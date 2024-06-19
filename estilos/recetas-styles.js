@@ -67,7 +67,6 @@ export const recetasStyles = css`
     .eliminar {
         display: flex;
         align-items: flex-end;
-        cursor: pointer;
     }
     
     @media (min-width: 768px) {
@@ -75,5 +74,17 @@ export const recetasStyles = css`
             justify-content: flex-end;
             padding: 10px;
         }
+    }
+
+    .acciones {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+    }
+
+    .eliminar svg, 
+    .editar svg {
+        cursor: pointer;
     }
 `;

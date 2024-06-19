@@ -4,7 +4,7 @@ import { parse } from 'url';
 
 const server = createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*'); // Permitir solicitudes desde cualquier origen
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS'); // Permitir los métodos GET, POST, DELETE, OPTIONS
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, PUT, OPTIONS'); // Permitir los métodos GET, POST, DELETE, OPTIONS
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type'); // Permitir el encabezado Content-Type
 
   if (req.method === 'OPTIONS') {
@@ -79,6 +79,38 @@ const server = createServer((req, res) => {
         res.end();
       });
     });
+  } else if (path.startsWith('/recetas/') && req.method === 'PUT') {
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    req.on('end', () => {
+      const updatedReceta = JSON.parse(body);
+      readFile('recetas.json', (err, data) => {
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Error interno del servidor' }));
+          return;
+        }
+        const recetas = JSON.parse(data);
+        const index = recetas.recetas.findIndex(receta => receta.id === updatedReceta.id);
+        if (index === -1) {
+          res.writeHead(404, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Receta no encontrada' }));
+          return;
+        }
+        recetas.recetas[index] = updatedReceta;
+        writeFile('recetas.json', JSON.stringify(recetas), err => {
+          if (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Error interno del servidor' }));
+            return;
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(updatedReceta));
+        });
+      });
+    });
   } else {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Ruta no encontrada' }));
@@ -87,5 +119,5 @@ const server = createServer((req, res) => {
 
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Servidor iniciado en el puerto ${ PORT }`);
+  console.log(`Servidor iniciado en el puerto ${PORT}`);
 });
